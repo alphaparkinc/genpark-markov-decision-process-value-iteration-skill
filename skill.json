@@ -1,0 +1,15 @@
+{
+  "name": "genpark-markov-decision-process-value-iteration-skill",
+  "version": "1.0.0",
+  "description": "Infinite-horizon MDP solver with Bellman value iteration and policy extraction.",
+  "author": "GenPark AI",
+  "license": "Apache-2.0",
+  "dependencies": [],
+  "keywords": [
+    "mdp",
+    "markov-decision-process",
+    "value-iteration",
+    "bellman-equation",
+    "reinforcement-learning"
+  ]
+}

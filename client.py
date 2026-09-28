@@ -1,66 +1,52 @@
-"""
-Markov Decision Process Value Iteration Skill Client
-Pure Python Standard Library implementation of Bellman Value Iteration for Markov Decision Processes (MDP).
-Computes optimal value functions V*(s) and extracts deterministic greedy policies pi*(s).
+"""Markov Decision Process (MDP) Value Iteration Solver
+100% Python Standard Library.
 """
 
-from typing import List, Dict, Any, Tuple, Optional
-
-
-class DiscreteMDP:
-    def __init__(self, states: List[str], actions: List[str], gamma: float = 0.95):
+class MDPValueIterationSolver:
+    """Bellman optimality equation value iteration and greedy policy extractor."""
+    def __init__(self, states, actions, transitions, gamma=0.95, epsilon=1e-4):
         self.states = states
         self.actions = actions
+        self.transitions = transitions
         self.gamma = gamma
-        # Transitions: P[s][a] = [(next_s, prob, reward), ...]
-        self.transitions: Dict[str, Dict[str, List[Tuple[str, float, float]]]] = {
-            s: {a: [] for a in actions} for s in states
-        }
+        self.epsilon = epsilon
+        self.V = {s: 0.0 for s in states}
+        self.policy = {s: None for s in states}
 
-    def add_transition(self, state: str, action: str, next_state: str, probability: float, reward: float):
-        self.transitions[state][action].append((next_state, probability, reward))
-
-    def value_iteration(self, theta: float = 1e-4, max_iter: int = 1000) -> Tuple[Dict[str, float], Dict[str, str], int]:
-        V = {s: 0.0 for s in self.states}
-        iterations = 0
-
-        for i in range(max_iter):
-            iterations += 1
+    def solve(self, max_iterations=500):
+        for it in range(max_iterations):
             delta = 0.0
-            new_V = dict(V)
-
+            new_V = {}
             for s in self.states:
-                # Terminal or dead-end states check
-                q_values = []
+                best_v = float('-inf')
                 for a in self.actions:
-                    branches = self.transitions[s][a]
-                    if not branches:
-                        continue
-                    q_a = sum(prob * (reward + self.gamma * V[next_s]) for next_s, prob, reward in branches)
-                    q_values.append(q_a)
-
-                if q_values:
-                    best_q = max(q_values)
-                    delta = max(delta, abs(best_q - V[s]))
-                    new_V[s] = best_q
-
-            V = new_V
-            if delta < theta:
+                    exp_val = 0.0
+                    for prob, next_s, reward in self.transitions.get((s, a), []):
+                        exp_val += prob * (reward + self.gamma * self.V[next_s])
+                    if exp_val > best_v:
+                        best_v = exp_val
+                if best_v == float('-inf'):
+                    best_v = 0.0
+                new_V[s] = best_v
+                delta = max(delta, abs(new_V[s] - self.V[s]))
+            self.V = new_V
+            if delta < self.epsilon:
                 break
 
-        # Extract optimal policy pi*
-        policy = {}
         for s in self.states:
             best_a = None
-            best_q = float("-inf")
+            best_val = float('-inf')
             for a in self.actions:
-                branches = self.transitions[s][a]
-                if not branches:
-                    continue
-                q_a = sum(prob * (reward + self.gamma * V[next_s]) for next_s, prob, reward in branches)
-                if q_a > best_q:
-                    best_q = q_a
+                exp_val = 0.0
+                for prob, next_s, reward in self.transitions.get((s, a), []):
+                    exp_val += prob * (reward + self.gamma * self.V[next_s])
+                if exp_val > best_val:
+                    best_val = exp_val
                     best_a = a
-            policy[s] = best_a
+            self.policy[s] = best_a
 
-        return V, policy, iterations
+        return {
+            "converged_iterations": it + 1,
+            "values": {s: round(v, 4) for s, v in self.V.items()},
+            "policy": self.policy
+        }

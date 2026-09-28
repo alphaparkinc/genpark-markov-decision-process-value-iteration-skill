@@ -1,0 +1,6 @@
+# Smithery configuration for genpark-markov-decision-process-value-iteration-skill
+name: genpark-markov-decision-process-value-iteration-skill
+version: 1.0.0
+runtime: python
+entrypoint: mcp_server.py
+type: stdio
